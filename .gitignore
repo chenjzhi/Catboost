@@ -1,0 +1,10 @@
+.venv
+.idea
+AutogluonModels
+results
+mnt
+test_data
+test.py
+test2.py
+seed_accuracy_results.csv
+策划案.csv
