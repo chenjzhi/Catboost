@@ -22,7 +22,8 @@ def load_and_preprocess_data(train_file, test_file=None):
         X_test = test_data.drop(['人工审核结果'], axis=1) if '人工审核结果' in test_data.columns else test_data
         X_real = test_data['人工审核结果']
         title = test_data['标题']
-        return X, y, X_test, X_real,title
+        content = test_data['正文']
+        return X, y, X_test, X_real,title,content
 
     return X, y
 
@@ -123,7 +124,7 @@ if __name__ == "__main__":
     test_file = "dataset/test.csv"
 
     print("加载数据...")
-    X, y, X_test,x_real,title = load_and_preprocess_data(train_file, test_file)
+    X, y, X_test,x_real,title,content = load_and_preprocess_data(train_file, test_file)
 
     print("\n数据类型检查:")
     X.info()
@@ -135,7 +136,7 @@ if __name__ == "__main__":
     print("\n训练CatBoost模型...")
     # 划分训练集和验证集
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
-    np.random.seed(100)
+    np.random.seed(70)
     mask = np.random.random(len(y_val)) < 0.2
     y_val_n = y_val.copy()
     y_val_n[mask] = 1 - y_val_n[mask]
@@ -150,10 +151,12 @@ if __name__ == "__main__":
     results_df = []
     result_df = pd.DataFrame({
         '标题': title,
+        '正文': content,
         '人工结果': x_real,
         '预测结果': predictions,
         '预测概率': probabilities,
         '模型准确率': accuracy_score
+
 
     })
     # 创建保存器实例
