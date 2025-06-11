@@ -2,7 +2,9 @@
 from pydantic_ai import Agent
 from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.models.openai import OpenAIModel, OpenAIModelName
-from config import API_KEY, API_BASE_URL, MODEL_NAME
+
+from rule.config import API_KEY, API_BASE_URL, MODEL_NAME
+
 
 def create_agent():
     provider = OpenAIProvider(api_key=API_KEY, base_url=API_BASE_URL)

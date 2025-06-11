@@ -6,7 +6,7 @@ import json
 import csv
 import math
 from concurrent.futures import ThreadPoolExecutor
-from config import CSV_FILE_PATH, TIMEOUT, MAX_RETRIES, RETRY_DELAY, MAX_WORKERS, RESULTS_FILE_PATH
+from rule.config import CSV_FILE_PATH, TIMEOUT, MAX_RETRIES, RETRY_DELAY, MAX_WORKERS, RESULTS_FILE_PATH
 
 def process_row(row, agent, logger):
     title = row['标题']
