@@ -8,41 +8,28 @@ class TextEmbedder:
     """处理文本特征的嵌入转换"""
 
     def __init__(self, model_name="BAAI/bge-m3", embeddings_dir="embeddings"):
-        """
-        初始化文本嵌入处理器
-
-        参数:
-            model_name: 要使用的嵌入模型名称
-            embeddings_dir: 保存/加载嵌入向量的目录
-        """
         self.model_name = model_name
+        self.cache_dir = os.path.join(embeddings_dir, 'cache')
         self.embeddings_dir = embeddings_dir
         self.model = None
 
         # 创建嵌入向量保存目录
-        if not os.path.exists(embeddings_dir):
-            os.makedirs(embeddings_dir)
+        for dir_path in [embeddings_dir, self.cache_dir]:
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path)
+
 
     def load_model(self):
         """加载文本嵌入模型"""
         if self.model is None:
             print(f"加载{self.model_name}模型...")
-            self.model = SentenceTransformer(self.model_name)
+            # self.model = SentenceTransformer(self.model_name,cache_folder=self.cache_dir)
+            self.model = SentenceTransformer("./cache/models--BAAI--bge-m3/snapshots/5617a9f61b028005a4858fdac845db406aefb181")
+
         return self.model
 
+
     def get_embeddings(self, texts, text_column, data_file, force_recompute=False):
-        """
-        获取文本的嵌入向量，优先使用缓存的嵌入向量
-
-        参数:
-            texts: 文本列表
-            text_column: 文本列名
-            data_file: 数据文件路径
-            force_recompute: 是否强制重新计算嵌入向量
-
-        返回:
-            嵌入向量数组
-        """
         # 生成嵌入文件路径
         file_basename = os.path.basename(data_file)
         embeddings_file = os.path.join(
@@ -66,19 +53,9 @@ class TextEmbedder:
 
         return embeddings
 
+
     def process_dataframe(self, df, text_columns, data_file, force_recompute=False):
-        """
-        处理DataFrame中的文本列，将其转换为嵌入向量
 
-        参数:
-            df: 输入DataFrame
-            text_columns: 要处理的文本列列表
-            data_file: 数据文件路径
-            force_recompute: 是否强制重新计算嵌入向量
-
-        返回:
-            处理后的DataFrame，文本列已被替换为嵌入向量特征
-        """
         # 确保所有文本列都存在且填充空值
         for col in text_columns:
             if col in df.columns:
