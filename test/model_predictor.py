@@ -68,15 +68,9 @@ class ModelPredictor:
 
         return y_pred_labels, y_proba
 
-    def predict_plus(self, x_test):
-        x_test = long_text_encoder.encode(x_test, flatten=False, use_cache=True)
-        y_pred = torch.sigmoid(model.predict(x_test))
-        label_pred = '通过' if y_pred >= self.threshold else '不通过'
-        return label_pred, y_pred
-
 
     def generate_results(self, predictions, probabilities, accuracy,
-                         title=None, content=None, y_real=None):
+                         title=None, content=None, y_real=None,theme=None):
         """生成结果DataFrame"""
         result_data = {
             '预测结果': predictions,
@@ -89,6 +83,8 @@ class ModelPredictor:
             result_data['标题'] = title
         if content is not None:
             result_data['正文'] = content
+        if theme is not None:
+            result_data['题材'] = theme
         if y_real is not None:
             result_data['人工结果'] = y_real
 
