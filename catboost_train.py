@@ -16,13 +16,20 @@ def load_and_preprocess_data(train_file, test_file=None):
 
     y = train_data['人工审核结果']
     y = y.map({'不通过': 0, '通过': 1})
-
+    text_features = ['正文', '标题']
+    for col in text_features:
+        if col in X.columns:
+            X[col] = X[col].fillna('')
     if test_file:
         test_data = pd.read_csv(test_file)
+        for col in text_features:
+            if col in test_data.columns:
+                test_data[col] = test_data[col].fillna('')
         X_test = test_data.drop(['人工审核结果'], axis=1) if '人工审核结果' in test_data.columns else test_data
         X_real = test_data['人工审核结果']
         title = test_data['标题']
-        return X, y, X_test, X_real,title
+        content = test_data['正文']
+        return X, y, X_test, X_real,title,content
 
     return X, y
 
@@ -49,9 +56,9 @@ def train_catboost_model(X_train, y_train,X_val,y_val):
     model = CatBoostClassifier(
         iterations=1000,
         learning_rate=0.03,
-        depth=6,
-        l2_leaf_reg=3,
-        random_seed=42,
+        depth=4,
+        l2_leaf_reg=5,
+        random_seed=4,
         eval_metric='Accuracy',
         verbose=100,
         early_stopping_rounds=50
@@ -120,10 +127,10 @@ def predict_with_model(model, X_test, class_labels=['不通过', '通过']):
 
 if __name__ == "__main__":
     train_file = "dataset/processed_data.csv"
-    test_file = "dataset/test.csv"
+    test_file = "dataset/overseas.csv"
 
     print("加载数据...")
-    X, y, X_test,x_real,title = load_and_preprocess_data(train_file, test_file)
+    X, y, X_test,x_real,title,content = load_and_preprocess_data(train_file, test_file)
 
     print("\n数据类型检查:")
     X.info()
@@ -135,12 +142,12 @@ if __name__ == "__main__":
     print("\n训练CatBoost模型...")
     # 划分训练集和验证集
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
-    np.random.seed(100)
-    mask = np.random.random(len(y_val)) < 0.2
-    y_val_n = y_val.copy()
-    y_val_n[mask] = 1 - y_val_n[mask]
+    # np.random.seed(70)
+    # mask = np.random.random(len(y_val)) < 0.2
+    # y_val_n = y_val.copy()
+    # y_val_n[mask] = 1 - y_val_n[mask]
 
-    model,accuracy_score = train_catboost_model(X_train, y_train,X_val,y_val_n)
+    model,accuracy_score = train_catboost_model(X_train, y_train,X_val,y_val)
     model_path = './mnt/trained_catboost_model_n.cbm'
     model.save_model(model_path)
     print(f"模型已保存至 {model_path}")
@@ -150,12 +157,13 @@ if __name__ == "__main__":
     results_df = []
     result_df = pd.DataFrame({
         '标题': title,
+        '正文': content,
         '人工结果': x_real,
         '预测结果': predictions,
         '预测概率': probabilities,
         '模型准确率': accuracy_score
-
     })
+
     # 创建保存器实例
     results_saver = MLResultsSaver(base_dir='./results', file_prefix='hook_review')
     # 保存结果
